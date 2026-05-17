@@ -247,6 +247,15 @@ function patchPom(projectDir, opts, bootVersion) {
     }
   }
 
+  // 3a. 移除 spring-modulith-starter-jpa（Initializr via `modulith` dep 会注入它）
+  // 原因：该依赖将 event_publication 映射为 JPA 实体；与 ddl-auto=validate 和
+  //       spring-modulith-starter-jdbc（JDBC 事件存储）同时使用时，Hibernate 验证
+  //       找不到该表而报错。使用 JDBC 事件存储不需要 JPA 事件存储。
+  pom = pom.replace(
+    /\s*<dependency>\s*<groupId>org\.springframework\.modulith<\/groupId>\s*<artifactId>spring-modulith-starter-jpa<\/artifactId>\s*<\/dependency>/g,
+    ''
+  );
+
   // 3. 注入缺失的 Modulith 子依赖 + Taikai + hypersistence-utils
   // Initializr adds core + test when `modulith` is selected; we add jdbc + docs if absent
   const depsToAdd = [];
