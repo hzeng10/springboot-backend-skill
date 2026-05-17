@@ -1,0 +1,32 @@
+<!-- 此文件由 create-project.mjs 合并到生成项目的 pom.xml 中 -->
+<!-- Maven Enforcer 插件：禁止 Lombok + 版本守护 -->
+
+<plugin>
+  <groupId>org.apache.maven.plugins</groupId>
+  <artifactId>maven-enforcer-plugin</artifactId>
+  <version>${maven-enforcer.version}</version>
+  <executions>
+    <execution>
+      <id>enforce-rules</id>
+      <goals>
+        <goal>enforce</goal>
+      </goals>
+      <configuration>
+        <rules>
+          <requireMavenVersion>
+            <version>[3.9.0,)</version>
+          </requireMavenVersion>
+          <requireJavaVersion>
+            <version>[21,)</version>
+          </requireJavaVersion>
+          <bannedDependencies>
+            <excludes>
+              <exclude>org.projectlombok:lombok</exclude>
+            </excludes>
+            <message>禁止使用 Lombok！请改用 Java record 或 IDE 生成代码。</message>
+          </bannedDependencies>
+        </rules>
+      </configuration>
+    </execution>
+  </executions>
+</plugin>

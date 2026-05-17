@@ -1,0 +1,56 @@
+version: '3'
+
+vars:
+  MVN: '{{if eq OS "windows"}}mvnw.cmd{{else}}./mvnw{{end}}'
+
+tasks:
+  build:
+    desc: 格式化代码并执行完整构建（含测试和质量门槛）
+    cmds:
+      - '{{.MVN}} clean spotless:apply verify'
+
+  start:
+    desc: 启动本地 Docker Compose 服务（MySQL）
+    cmds:
+      - docker compose up --force-recreate -d
+
+  stop:
+    desc: 停止本地 Docker Compose 服务
+    cmds:
+      - docker compose down
+
+  restart:
+    desc: 重启本地 Docker Compose 服务
+    cmds:
+      - task: stop
+      - docker compose up --force-recreate -d
+
+  run:
+    desc: 启动 Spring Boot 应用
+    cmds:
+      - '{{.MVN}} spring-boot:run'
+
+  test:
+    desc: 只运行单元测试（快速）
+    cmds:
+      - '{{.MVN}} test'
+
+  verify:
+    desc: 运行全量测试（含集成测试、ArchUnit、JaCoCo）
+    cmds:
+      - '{{.MVN}} verify'
+
+  format:
+    desc: 格式化所有 Java 代码（Spotless Palantir）
+    cmds:
+      - '{{.MVN}} spotless:apply'
+
+  build-image:
+    desc: 用 Spring Boot Maven Plugin（Paketo Buildpacks）构建 Docker 镜像
+    cmds:
+      - '{{.MVN}} spring-boot:build-image -DskipTests'
+
+  clean:
+    desc: 清理构建产物
+    cmds:
+      - '{{.MVN}} clean'

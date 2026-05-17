@@ -1,0 +1,56 @@
+package __PACKAGE__;
+
+import com.enofex.taikai.Taikai;
+import org.junit.jupiter.api.Test;
+
+class ArchitectureTest {
+
+    private static final String BASE_PACKAGE = "__BASE_PACKAGE__";
+
+    @Test
+    void shouldFollowArchitectureRules() {
+        Taikai.builder()
+            .namespace(BASE_PACKAGE)
+            .java(java -> java
+                .noUsageOfDeprecatedAPIs()
+                .noUsageOfSystemOutOrErr()
+                .methodsShouldNotThrowGenericException()
+                .utilityClassesShouldBeFinalAndHavePrivateConstructor()
+                .noImportsCycles()
+                .fieldsShouldNotHaveCollectionSuffixes()
+                .constantsShouldFollowConventions()
+                .interfacesShouldNotHavePrefixI()
+            )
+            .logging(logging -> logging
+                .loggersShouldBePrivateStaticFinal()
+                .loggersShouldBeNamedLog()
+            )
+            .test(test -> test
+                .classesShouldBePackagePrivate(".*Test")
+                .classesShouldNotBeAnnotatedWithDisabled()
+            )
+            .spring(spring -> spring
+                .noAutowiredFields()
+                .controllers(controllers -> controllers
+                    .shouldBeAnnotatedWithRestController()
+                    .namesShouldEndWithController()
+                    .shouldBePackagePrivate()
+                    .shouldNotDependOnOtherControllers()
+                )
+                .services(services -> services
+                    .shouldBeAnnotatedWithService()
+                    .namesShouldEndWithService()
+                    .shouldNotDependOnControllers()
+                )
+                .repositories(repositories -> repositories
+                    .shouldNotDependOnServices()
+                    .namesShouldEndWithRepository()
+                )
+                .configurations(configurations -> configurations
+                    .namesShouldMatch(".+Config")
+                )
+            )
+            .build()
+            .check();
+    }
+}

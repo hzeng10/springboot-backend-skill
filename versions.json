@@ -1,0 +1,21 @@
+{
+  "javaVersion": "21",
+  "springBootPreferredMajor": "3",
+  "springBootFallback": "3.5.0",
+  "mysqlVersion": "8.4",
+  "temurinVersion": "21",
+  "mavenMinVersion": "3.9.0",
+  "flywayVersion": "10",
+  "testcontainersVersion": "1.20.4",
+  "mysqlConnectorVersion": "9.0.0",
+  "spotlessVersion": "3.2.0",
+  "palantirJavaFormatVersion": "2.85.0",
+  "jacocoVersion": "0.8.14",
+  "jacocoMinimumCoverage": "80%",
+  "gitCommitIdVersion": "9.0.1",
+  "taikaiVersion": "1.60.0",
+  "mavenEnforcerVersion": "3.4.1",
+  "jjwtVersion": "0.12.5",
+  "springModulithVersion": "1.4.1",
+  "hypersistenceUtilsVersion": "3.9.10"
+}

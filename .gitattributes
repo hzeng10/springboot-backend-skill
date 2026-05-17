@@ -1,0 +1,26 @@
+# 归一化所有文本文件行尾
+* text=auto
+
+# Shell 脚本强制 LF（跨平台兼容）
+*.sh text eol=lf
+
+# PowerShell 脚本强制 CRLF（Windows 原生）
+*.ps1 text eol=crlf
+
+# Java / XML / Properties / JSON 统一 LF
+*.java text eol=lf
+*.xml text eol=lf
+*.properties text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.json text eol=lf
+*.sql text eol=lf
+*.md text eol=lf
+
+# 二进制文件不做行尾处理
+*.png binary
+*.jpg binary
+*.gif binary
+*.ico binary
+*.jar binary
+*.zip binary

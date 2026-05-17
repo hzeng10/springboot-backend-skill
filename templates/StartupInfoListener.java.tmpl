@@ -1,0 +1,59 @@
+package __PACKAGE__.config;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.boot.ansi.AnsiColor;
+import org.springframework.boot.ansi.AnsiOutput;
+import org.springframework.boot.ansi.AnsiStyle;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
+import org.springframework.core.env.Environment;
+import org.springframework.stereotype.Component;
+
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
+@Component
+class StartupInfoListener {
+
+    private static final Logger LOG = LoggerFactory.getLogger(StartupInfoListener.class);
+
+    private final Environment env;
+
+    StartupInfoListener(Environment env) {
+        this.env = env;
+    }
+
+    @EventListener(ApplicationReadyEvent.class)
+    void onApplicationReady() {
+        String appName = env.getProperty("spring.application.name", "app");
+        String port = env.getProperty("server.port", "8080");
+        String contextPath = env.getProperty("server.servlet.context-path", "");
+        String[] profiles = env.getActiveProfiles();
+
+        String host = "localhost";
+        try {
+            host = InetAddress.getLocalHost().getHostAddress();
+        } catch (UnknownHostException ignored) {
+        }
+
+        String profileStr = profiles.length > 0 ? String.join(", ", profiles) : "default";
+        String baseUrl = "http://localhost:" + port + contextPath;
+        String externalUrl = "http://" + host + ":" + port + contextPath;
+
+        LOG.info(AnsiOutput.toString(
+            AnsiColor.GREEN, AnsiStyle.BOLD,
+            "\n----------------------------------------------------------\n",
+            AnsiStyle.NORMAL,
+            "  Application '", AnsiColor.CYAN, appName, AnsiColor.DEFAULT, "' is running!\n",
+            "  Local:    ", AnsiColor.CYAN, baseUrl, AnsiColor.DEFAULT, "\n",
+            "  External: ", AnsiColor.CYAN, externalUrl, AnsiColor.DEFAULT, "\n",
+            "  API:      ", AnsiColor.CYAN, baseUrl + "/api", AnsiColor.DEFAULT, "\n",
+            "  Actuator: ", AnsiColor.CYAN, baseUrl + "/actuator", AnsiColor.DEFAULT, "\n",
+            "  Profile(s): ", AnsiColor.YELLOW, profileStr, AnsiColor.DEFAULT, "\n",
+            AnsiColor.GREEN, AnsiStyle.BOLD,
+            "----------------------------------------------------------",
+            AnsiStyle.NORMAL
+        ));
+    }
+}

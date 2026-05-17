@@ -1,0 +1,22 @@
+// users 模块声明（示例）
+// 将此文件复制到每个顶层业务包根目录，按需调整 displayName 和 allowedDependencies
+
+@org.springframework.modulith.ApplicationModule(
+    displayName = "Users",
+    allowedDependencies = {"shared"}
+)
+package __PACKAGE__.users;
+
+// ── shared 模块声明（OPEN 类型，不强制封装内部结构）──────────────────────────
+// 将以下内容放到 shared/package-info.java
+
+// @org.springframework.modulith.ApplicationModule(
+//     type = org.springframework.modulith.ApplicationModule.Type.OPEN
+// )
+// package __PACKAGE__.shared;
+
+// ── models/ 子包命名接口声明（暴露给其他模块）────────────────────────────────
+// 将以下内容放到 users/domain/models/package-info.java
+
+// @org.springframework.modulith.NamedInterface("api")
+// package __PACKAGE__.users.domain.models;

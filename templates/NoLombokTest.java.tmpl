@@ -1,0 +1,18 @@
+package __PACKAGE__;
+
+import com.tngtech.archunit.core.importer.ClassFileImporter;
+import org.junit.jupiter.api.Test;
+
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
+
+class NoLombokTest {
+
+    @Test
+    void noLombokOnClasspath() {
+        classes()
+            .should()
+            .notDependOnClassesThat()
+            .resideInAPackage("..lombok..")
+            .check(new ClassFileImporter().importPath("target/classes"));
+    }
+}
