@@ -3,15 +3,15 @@ package __PACKAGE__;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import org.junit.jupiter.api.Test;
 
-import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
 class NoLombokTest {
 
     @Test
     void noLombokOnClasspath() {
-        classes()
+        noClasses()
             .should()
-            .notDependOnClassesThat()
+            .dependOnClassesThat()
             .resideInAPackage("..lombok..")
             .check(new ClassFileImporter().importPath("target/classes"));
     }

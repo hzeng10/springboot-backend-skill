@@ -14,20 +14,20 @@ class ArchitectureTest {
             .java(java -> java
                 .noUsageOfDeprecatedAPIs()
                 .noUsageOfSystemOutOrErr()
-                .methodsShouldNotThrowGenericException()
+                .methodsShouldNotDeclareGenericExceptions()
                 .utilityClassesShouldBeFinalAndHavePrivateConstructor()
-                .noImportsCycles()
-                .fieldsShouldNotHaveCollectionSuffixes()
-                .constantsShouldFollowConventions()
-                .interfacesShouldNotHavePrefixI()
+                .imports(imports -> imports
+                    .shouldHaveNoCycles()
+                )
             )
             .logging(logging -> logging
-                .loggersShouldBePrivateStaticFinal()
-                .loggersShouldBeNamedLog()
+                .loggersShouldFollowConventions("org.slf4j.Logger", "LOG")
             )
             .test(test -> test
-                .classesShouldBePackagePrivate(".*Test")
-                .classesShouldNotBeAnnotatedWithDisabled()
+                .junit(j -> j
+                    .methodsShouldBePackagePrivate()
+                    .methodsShouldNotBeAnnotatedWithDisabled()
+                )
             )
             .spring(spring -> spring
                 .noAutowiredFields()

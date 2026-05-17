@@ -59,13 +59,13 @@ import org.springframework.boot.testcontainers.service.connection.ServiceConnect
 public abstract class BaseIT {
 
     @Autowired
-    protected RestTestClient restTestClient;
+    protected TestRestTemplate restTemplate;
 }
 ```
 
-**RestTestClient 包路径（Boot 3.5）：**
+**TestRestTemplate 包路径（Boot 3.5）：**
 ```java
-import org.springframework.test.web.servlet.client.RestTestClient;
+import org.springframework.boot.test.web.client.TestRestTemplate;
 ```
 
 ## test-data.sql
@@ -90,7 +90,7 @@ class UserControllerIT extends BaseIT {
             {"firstName": "Bob", "lastName": "Jones", "email": "bob@test.com", "password": "password123"}
             """;
 
-        restTestClient.post().uri("/api/users")
+        restTemplate.post().uri("/api/users")
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue(request)
             .exchange()
@@ -100,7 +100,7 @@ class UserControllerIT extends BaseIT {
 
     @Test
     void getUser_notFound() {
-        restTestClient.get().uri("/api/users/99999")
+        restTemplate.get().uri("/api/users/99999")
             .exchange()
             .expectStatus().isNotFound()
             .expectBody()

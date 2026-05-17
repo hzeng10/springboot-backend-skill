@@ -201,26 +201,31 @@ function patchPom(projectDir, opts, bootVersion) {
   let pom = readFileSync(pomPath, 'utf-8');
   const v = getVersions();
 
-  // 1. 注入 <properties>
-  const propsToAdd = `
+  // 1. 注入 <properties>（跳过 Initializr 已经生成的 spring-modulith.version）
+  let propsToAdd = `
         <spotless.version>${v.spotlessVersion}</spotless.version>
         <palantir-java-format.version>${v.palantirJavaFormatVersion}</palantir-java-format.version>
         <jacoco.version>${v.jacocoVersion}</jacoco.version>
         <jacoco.minimum.coverage>0.80</jacoco.minimum.coverage>
         <git-commit-id.version>${v.gitCommitIdVersion}</git-commit-id.version>
         <taikai.version>${v.taikaiVersion}</taikai.version>
-        <spring-modulith.version>${v.springModulithVersion}</spring-modulith.version>
         <maven-enforcer.version>${v.mavenEnforcerVersion}</maven-enforcer.version>
         <hypersistence-utils.version>${v.hypersistenceUtilsVersion}</hypersistence-utils.version>
         <jjwt.version>${v.jjwtVersion}</jjwt.version>`;
+
+  // Initializr already injects spring-modulith.version when `modulith` dep is selected
+  if (!pom.includes('<spring-modulith.version>')) {
+    propsToAdd = `\n        <spring-modulith.version>${v.springModulithVersion}</spring-modulith.version>` + propsToAdd;
+  }
 
   pom = pom.replace(
     /(\s*<\/properties>)/,
     `${propsToAdd}$1`
   );
 
-  // 2. 注入 Spring Modulith BOM 到 <dependencyManagement>
-  const modulithBom = `
+  // 2. Modulith BOM — Initializr already adds it; only inject if missing
+  if (!pom.includes('spring-modulith-bom')) {
+    const modulithBom = `
             <dependency>
                 <groupId>org.springframework.modulith</groupId>
                 <artifactId>spring-modulith-bom</artifactId>
@@ -229,41 +234,37 @@ function patchPom(projectDir, opts, bootVersion) {
                 <scope>import</scope>
             </dependency>`;
 
-  if (pom.includes('<dependencyManagement>')) {
-    pom = pom.replace(
-      /(<dependencyManagement>[\s\S]*?<dependencies>)/,
-      `$1${modulithBom}`
-    );
-  } else {
-    // 没有 dependencyManagement，插入在 <dependencies> 前
-    pom = pom.replace(
-      /(\s*<dependencies>)/,
-      `\n    <dependencyManagement>\n        <dependencies>${modulithBom}\n        </dependencies>\n    </dependencyManagement>$1`
-    );
+    if (pom.includes('<dependencyManagement>')) {
+      pom = pom.replace(
+        /(<dependencyManagement>[\s\S]*?<dependencies>)/,
+        `$1${modulithBom}`
+      );
+    } else {
+      pom = pom.replace(
+        /(\s*<dependencies>)/,
+        `\n    <dependencyManagement>\n        <dependencies>${modulithBom}\n        </dependencies>\n    </dependencyManagement>$1`
+      );
+    }
   }
 
-  // 3. 注入 Spring Modulith + Taikai + hypersistence-utils 到 <dependencies>
-  const depsToAdd = `
-        <!-- Spring Modulith -->
-        <dependency>
-            <groupId>org.springframework.modulith</groupId>
-            <artifactId>spring-modulith-starter-core</artifactId>
-        </dependency>
-        <dependency>
+  // 3. 注入缺失的 Modulith 子依赖 + Taikai + hypersistence-utils
+  // Initializr adds core + test when `modulith` is selected; we add jdbc + docs if absent
+  const depsToAdd = [];
+
+  if (!pom.includes('spring-modulith-starter-jdbc')) {
+    depsToAdd.push(`        <dependency>
             <groupId>org.springframework.modulith</groupId>
             <artifactId>spring-modulith-starter-jdbc</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.modulith</groupId>
-            <artifactId>spring-modulith-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
+        </dependency>`);
+  }
+  if (!pom.includes('spring-modulith-docs')) {
+    depsToAdd.push(`        <dependency>
             <groupId>org.springframework.modulith</groupId>
             <artifactId>spring-modulith-docs</artifactId>
             <scope>test</scope>
-        </dependency>
-        <!-- Taikai ArchUnit -->
+        </dependency>`);
+  }
+  depsToAdd.push(`        <!-- Taikai ArchUnit -->
         <dependency>
             <groupId>com.enofex</groupId>
             <artifactId>taikai</artifactId>
@@ -275,14 +276,41 @@ function patchPom(projectDir, opts, bootVersion) {
             <groupId>io.hypersistence</groupId>
             <artifactId>hypersistence-utils-hibernate-63</artifactId>
             <version>\${hypersistence-utils.version}</version>
-        </dependency>`;
+        </dependency>`);
 
+  // The main <dependencies> block closes BEFORE <dependencyManagement> in Initializr poms.
+  // Find the last </dependencies> that appears before <dependencyManagement> (or end of file).
+  const dmPos = pom.indexOf('<dependencyManagement>');
+  const searchBefore = dmPos !== -1 ? dmPos : pom.length;
+  const mainDepClose = pom.lastIndexOf('</dependencies>', searchBefore);
+  pom = pom.substring(0, mainDepClose)
+    + '\n' + depsToAdd.join('\n') + '\n\t'
+    + pom.substring(mainDepClose);
+
+  // 4. 补全 Initializr 生成的 spring-boot-maven-plugin（添加 build-info + 镜像名）
+  // Initializr 生成的是空声明（无 executions），在此处扩展，而不是重复声明
+  const bootPluginFull = `<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-maven-plugin</artifactId>
+			<executions>
+				<execution>
+					<id>build-info</id>
+					<goals>
+						<goal>build-info</goal>
+					</goals>
+				</execution>
+			</executions>
+			<configuration>
+				<image>
+					<name>\${project.artifactId}:\${project.version}</name>
+				</image>
+			</configuration>`;
+  // Replace the bare plugin declaration (no executions block)
   pom = pom.replace(
-    /(\s*<dependencies>)/,
-    `$1${depsToAdd}`
+    /<groupId>org\.springframework\.boot<\/groupId>\s*\n\s*<artifactId>spring-boot-maven-plugin<\/artifactId>\s*\n\s*<\/plugin>/,
+    bootPluginFull + '\n\t\t\t</plugin>'
   );
 
-  // 4. 注入插件（在 </plugins> 之前）
+  // 5. 注入其他插件（Spotless、JaCoCo、git-commit-id、Failsafe、Enforcer）
   const plugins = readFileSync(join(TEMPLATES_DIR, 'pom-plugins.xml'), 'utf-8');
   const enforcer = readFileSync(join(TEMPLATES_DIR, 'pom-enforcer.xml'), 'utf-8');
 

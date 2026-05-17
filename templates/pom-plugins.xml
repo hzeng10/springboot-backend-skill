@@ -87,6 +87,7 @@
     </execution>
   </executions>
   <configuration>
+    <failOnNoGitDirectory>false</failOnNoGitDirectory>
     <generateGitPropertiesFile>true</generateGitPropertiesFile>
     <includeOnlyProperties>
       <includeOnlyProperty>git.branch</includeOnlyProperty>
@@ -94,25 +95,6 @@
       <includeOnlyProperty>git.commit.time</includeOnlyProperty>
       <includeOnlyProperty>git.dirty</includeOnlyProperty>
     </includeOnlyProperties>
-  </configuration>
-</plugin>
-
-<!-- Spring Boot Maven Plugin：构建信息 + 镜像名 -->
-<plugin>
-  <groupId>org.springframework.boot</groupId>
-  <artifactId>spring-boot-maven-plugin</artifactId>
-  <executions>
-    <execution>
-      <id>build-info</id>
-      <goals>
-        <goal>build-info</goal>
-      </goals>
-    </execution>
-  </executions>
-  <configuration>
-    <image>
-      <name>${project.artifactId}:${project.version}</name>
-    </image>
   </configuration>
 </plugin>
 

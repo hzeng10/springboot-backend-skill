@@ -2,9 +2,9 @@ package __PACKAGE__;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.jdbc.Sql;
-import org.springframework.test.web.servlet.client.RestTestClient;
 
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
@@ -14,5 +14,5 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 public abstract class BaseIT {
 
     @Autowired
-    protected RestTestClient restTestClient;
+    protected TestRestTemplate restTemplate;
 }
